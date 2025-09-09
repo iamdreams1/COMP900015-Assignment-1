@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+
 public class DictionaryManager {
     private final Map<String, List<String>> dictionary;
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
@@ -58,7 +59,7 @@ public class DictionaryManager {
         }
     }
 
-    public String add(String word, List<String> meanings) {
+    public String add(String word, List<String> meanings, long delay) {
         lock.writeLock().lock();
         try {
             if (dictionary.containsKey(word)) {
@@ -66,13 +67,20 @@ public class DictionaryManager {
             }
             dictionary.put(word, meanings);
             saveDictionaryToFile();
+
+            if (delay > 0) {
+                System.out.println("Lock held for " + delay + "ms for simulated slow write...");
+                Thread.sleep(delay);
+            }
             return "SUCCESS";
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         } finally {
             lock.writeLock().unlock();
         }
     }
 
-    public String remove(String word) {
+    public String remove(String word, long delay) {
         lock.writeLock().lock();
         try {
             if (!dictionary.containsKey(word)) {
@@ -80,11 +88,92 @@ public class DictionaryManager {
             }
             dictionary.remove(word);
             saveDictionaryToFile();
+
+            if (delay > 0) {
+                System.out.println("Lock held for " + delay + "ms for simulated slow write...");
+                Thread.sleep(delay);
+            }
             return "SUCCESS";
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         } finally {
             lock.writeLock().unlock();
         }
     }
 
-    // TODO: Implement methods for 'update meaning' and 'add new meaning'
+    public String updateMeaning(String word, String meaningToBeUpdated, String newMeaning, long delay) {
+        lock.writeLock().lock();
+        try {
+            // 2. Check if the word exists in the dictionary.
+            List<String> meanings = dictionary.get(word);
+            if (meanings == null) {
+                return "WORD_NOT_FOUND";
+            }
+
+            // 3. Find the index of the specific meaning that needs to be updated.
+            int index = meanings.indexOf(meaningToBeUpdated);
+            if (index == -1) {
+                // The specific meaning was not found in the list.
+                return "MEANING_NOT_FOUND";
+            }
+
+            if (meanings.contains(newMeaning)) {
+                return "MEANING_EXISTS";
+            }
+
+            // 4. Update the meaning at the found index with the new meaning.
+            meanings.set(index, newMeaning);
+
+            // 5. Save the changes to the JSON file to make them persistent.
+            saveDictionaryToFile();
+
+            if (delay > 0) {
+                System.out.println("Lock held for " + delay + "ms for simulated slow write...");
+                Thread.sleep(delay);
+            }
+
+            // 6. Return a success status.
+            return "SUCCESS";
+
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+            // 7. Always release the lock in a finally block.
+            lock.writeLock().unlock();
+        }
+    }
+
+    public String addNewMeaning(String word, String newMeaning, long delay) {
+        lock.writeLock().lock();
+        try {
+            // 2. Check if the word exists in the dictionary.
+            List<String> meanings = dictionary.get(word);
+            if (meanings == null) {
+                return "WORD_NOT_FOUND";
+            }
+
+            // 3. Check if the meaning already exists to prevent duplicates.
+            if (meanings.contains(newMeaning)) {
+                return "MEANING_EXISTS";
+            }
+
+            // 4. Add the new meaning to the existing list.
+            meanings.add(newMeaning);
+
+            // 5. Save the changes to the file.
+            saveDictionaryToFile();
+            if (delay > 0) {
+                System.out.println("Lock held for " + delay + "ms for simulated slow write...");
+                Thread.sleep(delay);
+            }
+            // 6. Return a success status.
+            return "SUCCESS";
+
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+            // 7. Always release the lock.
+            lock.writeLock().unlock();
+        }
+    }
 }

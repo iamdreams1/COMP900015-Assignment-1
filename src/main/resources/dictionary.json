@@ -1,10 +1,1 @@
-{
-  "apple": [
-    "A round fruit with red or green skin and a whitish interior.",
-    "A major technology company."
-  ],
-  "java": [
-    "A high-level, object-oriented programming language.",
-    "An island of Indonesia."
-  ]
-}
+{"hi":["ok","yes"],"no":[""],"nihao":["good"],"testword":["a word for testing"],"nice1":["good"],"good":["nihao"],"nice":["good"],"apple":["cnm","wrsndm","A type of fruit"],"java":["A high-level, object-oriented programming language.","An island of Indonesia."],"persistence":["oh yea"],"hello":["something","ok"],"ok":["nihao",""]}
